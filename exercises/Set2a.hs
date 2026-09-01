@@ -63,6 +63,8 @@ updateAt i x xs = take i xs ++ [x] ++ drop (i+1) xs
 
 substring :: Int -> Int -> String -> String
 substring i j s = take (j-i) (drop i s)
+-- or
+-- drop i (take j s)
 
 ------------------------------------------------------------------------------
 -- Ex 5: check if a string is a palindrome. A palindrome is a string
@@ -94,7 +96,7 @@ palindromify :: String -> String
 palindromify s
  | isPalindrome s == True    = s
  | isPalindrome s == False   = palindromify (tail (init s))
-
+-- otherwise for 2nd condt
 ------------------------------------------------------------------------------
 -- Ex 7: implement safe integer division, that is, a function that
 -- returns a Just result normally, but Nothing if the divisor is zero.
@@ -109,6 +111,8 @@ safeDiv :: Integer -> Integer -> Maybe Integer
 safeDiv x y
  | y == 0    = Nothing
  | y /= 0    = Just (div x y)
+ -- safeDiv x 0 = Nothing
+ -- safeDiv x y = Just (div x y)
 
 ------------------------------------------------------------------------------
 -- Ex 8: implement a function greet that greets a person given a first
@@ -173,3 +177,4 @@ addEithers :: Either String Int -> Either String Int -> Either String Int
 addEithers (Right a) (Right b) = Right (a+b)
 addEithers (Right a) (Left b) = Left b
 addEithers (Left a) _ = Left a
+-- addEithers _  b = b
