@@ -13,6 +13,7 @@ import Data.Char
 import Data.Either
 import Data.List
 import Data.ByteString (takeWhile)
+import GHC.RTS.Flags (DebugFlags(interpreter))
 
 ------------------------------------------------------------------------------
 -- Ex 1: implement the function maxBy that takes as argument a
@@ -317,11 +318,18 @@ multiApp f gs x = f $ map ($ x) gs
 -- using (:). If you build the list in an argument to a helper
 -- function, the surprise won't work. See section 3.8 in the material.
 
---up    (x,y) = (x,y+1)
---down  (x,y) = (x,y-1)
---left  (x,y) = (x-1,y)
---right (x,y) = (x+1,y)
+-- Scuffed implementation but this took me way too long
 
+interpreter :: [String] -> [String]
+interpreter [] = []
+interpreter cmds = 
+ let n     = getInd cmds
+     start = take n cmds
+     end   = drop (n+1) cmds in
+ if n < length cmds
+ -- Error without Set3a._
+    then parsePrint(cmds !! n)(compCmd (take n cmds)) : Set3a.interpreter(start ++ end)
+    else []
 
 parse cmd
  | cmd == "up"     = \(x,y) -> (x,y+1)
@@ -329,30 +337,19 @@ parse cmd
  | cmd == "left"   = \(x,y) -> (x-1,y)
  | cmd == "right"  = \(x,y) -> (x+1,y)
  | otherwise       = id
--- | cmd == "printX" = \(x,y) -> x
--- | cmd == "printY" = \(x,y) -> y
 
-intr cmds f = intr (tail cmds) (f . parse (head cmds))
+parsePrint cmd
+ | cmd == "printX"    = \(x,y) -> show x
+ | cmd == "printY"    = \(x,y) -> show y
 
-interpreter :: [String] -> [String]
-interpreter [] = []
-interpreter cmds
- | h == "printX"     = "x" : intr (tail cmds) f
- | h == "printY"     = "y" : intr (tail cmds) f
- | otherwise         = intr (tail cmds) 
+myCompose [] = id 
+myCompose fs =  myCompose(tail fs) . head fs
 
- where h = head cmds
+parseMap cmds = myCompose(map parse cmds)
+-- Works so far
+compCmd cmds = parseMap cmds $ (0,0)
 
---interpreter cmds = let h = head cmds in
---    if h == "printX" || h == "printY"
---      then f : interpreter(tail cmds)
---       else parse (tail cmds) xy
---	   where interp lst tpl = if lst
-
-
---interpreter cmds = g . f (head cmds) : interpreter (tail cmds)
---interpreter cmds = 
---  where f "up"    (x,y) = (x,y+1)
---        f "down"  (x,y) = (x,y-1)
---        f "left"  (x,y) = (x-1,y)
---        f "right" (x,y) = (x+1,y)
+getInd [] = 0
+getInd (x:xs) = if x == "printX" || x == "printY"
+  then 0
+  else getInd xs + 1 
