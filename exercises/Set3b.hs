@@ -39,8 +39,11 @@ import Mooc.Todo
 --   buildList 7 0 3 ==> [3]
 
 buildList :: Int -> Int -> Int -> [Int]
-buildList start count end = todo
-
+buildList start 0 end = [end]
+buildList start count end = start : buildList start (count-1) end
+--buildList start count end = loopC count
+--  where loopC 0 = [end]
+--        loopC n = start : loopC (n-1)
 ------------------------------------------------------------------------------
 -- Ex 2: given i, build the list of sums [1, 1+2, 1+2+3, .., 1+2+..+i]
 --
@@ -49,9 +52,10 @@ buildList start count end = todo
 -- Ps. you'll probably need a recursive helper function
 
 sums :: Int -> [Int]
-sums i = todo
-
-------------------------------------------------------------------------------
+sums i = s' i 1 1
+  where s' 0 _ _ = []
+        s' n m a = a + (m-1) : s' (n-1) (m+1) (a+m)
+-------------------------------------------------------------------------------
 -- Ex 3: define a function mylast that returns the last value of the
 -- given list. For an empty list, a provided default value is
 -- returned.
@@ -63,7 +67,9 @@ sums i = todo
 --   mylast 0 [1,2,3] ==> 3
 
 mylast :: a -> [a] -> a
-mylast def xs = todo
+mylast def [] = def
+mylast def (x:[]) = x
+mylast def (x:xs) = mylast def xs
 
 ------------------------------------------------------------------------------
 -- Ex 4: safe list indexing. Define a function indexDefault so that
@@ -80,8 +86,14 @@ mylast def xs = todo
 --   indexDefault [10,20,30] 3 7         ==>  7
 --   indexDefault ["a","b","c"] (-1) "d" ==> "d"
 
+-- should probably have a check for neg numbers
+-- this technically works as is, since neg number never gets to zero
+-- ie. list gets to [] -> def, however it would take a long time to check
+-- for large negative inputs
 indexDefault :: [a] -> Int -> a -> a
-indexDefault xs i def = todo
+indexDefault [] _ def = def
+indexDefault (x:xs) 0 def = x
+indexDefault (x:xs) i def = indexDefault xs (i-1) def
 
 ------------------------------------------------------------------------------
 -- Ex 5: define a function that checks if the given list is in
@@ -97,7 +109,11 @@ indexDefault xs i def = todo
 --   sorted [7,2,7] ==> False
 
 sorted :: [Int] -> Bool
-sorted xs = todo
+sorted [] = True
+sorted [x] = True
+sorted (x:y:xs)
+ | x <= y     = sorted (y:xs)
+ | otherwise  = False
 
 ------------------------------------------------------------------------------
 -- Ex 6: compute the partial sums of the given list like this:
@@ -109,7 +125,11 @@ sorted xs = todo
 -- Use pattern matching and recursion (and the list constructors : and [])
 
 sumsOf :: [Int] -> [Int]
-sumsOf xs = todo
+-- maybe don't need this if better logic below
+sumsOf [] = []
+sumsOf (x:xs) = s' (x:xs) 0 
+  where s' [] a = []
+        s' (x:xs) a = a + x : s' xs (a+x)
 
 ------------------------------------------------------------------------------
 -- Ex 7: implement the function merge that merges two sorted lists of
@@ -122,8 +142,12 @@ sumsOf xs = todo
 --   merge [1,1,6] [1,2]   ==> [1,1,1,2,6]
 
 merge :: [Int] -> [Int] -> [Int]
-merge xs ys = todo
-
+merge [] [] = []
+merge [] (y:ys) = y : merge [] ys
+merge (x:xs) [] = x : merge xs []
+merge (x:xs) (y:ys)
+ | x <= y       = x : merge xs (y:ys)
+ | otherwise    = y : merge (x:xs) ys
 ------------------------------------------------------------------------------
 -- Ex 8: compute the biggest element, using a comparison function
 -- passed as an argument.
@@ -146,7 +170,10 @@ merge xs ys = todo
 --     ==> ("Mouse",8)
 
 mymaximum :: (a -> a -> Bool) -> a -> [a] -> a
-mymaximum bigger initial xs = todo
+mymaximum _ initial [] = initial
+mymaximum bigger initial (x:xs)
+ | bigger initial x == True     = mymaximum bigger initial xs
+ | otherwise                    = mymaximum bigger x xs
 
 ------------------------------------------------------------------------------
 -- Ex 9: define a version of map that takes a two-argument function

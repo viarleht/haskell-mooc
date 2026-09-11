@@ -5,15 +5,16 @@
 
 module Set3a where
 
-import Mooc.Todo
-
 -- Some imports you'll need.
 -- Do not add any other imports! :)
+
+import Data.ByteString (takeWhile)
 import Data.Char
 import Data.Either
 import Data.List
-import Data.ByteString (takeWhile)
-import GHC.RTS.Flags (DebugFlags(interpreter))
+import GHC.RTS.Flags (DebugFlags (interpreter))
+import Mooc.Todo
+import Test.QuickCheck.Text (Str)
 
 ------------------------------------------------------------------------------
 -- Ex 1: implement the function maxBy that takes as argument a
@@ -31,8 +32,8 @@ import GHC.RTS.Flags (DebugFlags(interpreter))
 
 maxBy :: (a -> Int) -> a -> a -> a
 maxBy measure a b
- | measure a >= measure b     = a
- | otherwise                  = b
+  | measure a >= measure b = a
+  | otherwise = b
 
 ------------------------------------------------------------------------------
 -- Ex 2: implement the function mapMaybe that takes a function and a
@@ -85,14 +86,16 @@ palindromeHalfs xs = map firstHalf (filter palindrome xs)
 
 firstHalf :: String -> String
 firstHalf xs = take len xs
-            where len
-                   | even (length xs)       = div (length xs) 2
-                   | otherwise              = div (length xs + 1) 2
+  where
+    len
+      | even (length xs) = div (length xs) 2
+      | otherwise = div (length xs + 1) 2
 
 palindrome :: String -> Bool
 palindrome x
- | x == reverse x      = True
- | otherwise           = False
+  | x == reverse x = True
+  | otherwise = False
+
 ------------------------------------------------------------------------------
 -- Ex 5: Implement a function capitalize that takes in a string and
 -- capitalizes the first letter of each word in it.
@@ -109,8 +112,10 @@ palindrome x
 --   capitalize "goodbye cruel world" ==> "Goodbye Cruel World"
 
 capitalize :: String -> String
-capitalize xs = unwords( map capFirst (words xs))
-  where capFirst str = [toUpper (head str)] ++ tail str
+capitalize xs = unwords (map capFirst (words xs))
+  where
+    capFirst str = [toUpper (head str)] ++ tail str
+
 ------------------------------------------------------------------------------
 -- Ex 6: powers k max should return all the powers of k that are less
 -- than or equal to max. For example:
@@ -126,10 +131,10 @@ capitalize xs = unwords( map capFirst (words xs))
 --   * the function takeWhile
 
 powers :: Int -> Int -> [Int]
---iter f 0 x = [x]
---iter f n x = x : iter f (n-1) (f x)
+-- iter f 0 x = [x]
+-- iter f n x = x : iter f (n-1) (f x)
 -- map (k^) [0..m] maps \x -> k^x to x in [0,1,...,m]
-powers k m = Data.List.takeWhile (<=m) (map (k^) [0..m]) --(iter (*k) m 1)
+powers k m = Data.List.takeWhile (<= m) (map (k ^) [0 .. m]) -- (iter (*k) m 1)
 ------------------------------------------------------------------------------
 -- Ex 7: implement a functional while loop. While should be a function
 -- that takes a checking function, an updating function, and an
@@ -150,10 +155,10 @@ powers k m = Data.List.takeWhile (<=m) (map (k^) [0..m]) --(iter (*k) m 1)
 --   in while check tail "xyzAvvt"
 --     ==> Avvt
 
-while :: (a->Bool) -> (a->a) -> a -> a
+while :: (a -> Bool) -> (a -> a) -> a -> a
 while check update value
- | check value    = while check update (update value)
- | otherwise      = value
+  | check value = while check update (update value)
+  | otherwise = value
 
 ------------------------------------------------------------------------------
 -- Ex 8: another version of a while loop. This time, the check
@@ -173,18 +178,19 @@ while check update value
 -- Hint! Remember the case-of expression from lecture 2.
 
 whileRight :: (a -> Either b a) -> a -> b
-whileRight check x = case check x of Right x -> whileRight check x
-                                     Left x  -> x
+whileRight check x = case check x of
+  Right x -> whileRight check x
+  Left x -> x
 
 -- for the whileRight examples:
 -- step k x doubles x if it's less than k
 step :: Int -> Int -> Either Int Int
-step k x = if x<k then Right (2*x) else Left x
+step k x = if x < k then Right (2 * x) else Left x
 
 -- bomb x implements a countdown: it returns x-1 or "BOOM" if x was 0
 bomb :: Int -> Either String Int
 bomb 0 = Left "BOOM"
-bomb x = Right (x-1)
+bomb x = Right (x - 1)
 
 ------------------------------------------------------------------------------
 -- Ex 9: given a list of strings and a length, return all strings that
@@ -199,9 +205,10 @@ bomb x = Right (x-1)
 
 joinToLength :: Int -> [String] -> [String]
 -- maybe could filter earlier to be more efficient? idk
---joinToLength n x = filter (\x -> length x == n)[ a ++ b | a <- x, b <- x]
+-- joinToLength n x = filter (\x -> length x == n)[ a ++ b | a <- x, b <- x]
 -- -> better way?
-joinToLength n x = [ a ++ b | a <- x, b <- x, length (a++b) == n ]
+joinToLength n x = [a ++ b | a <- x, b <- x, length (a ++ b) == n]
+
 ------------------------------------------------------------------------------
 -- Ex 10: implement the operator +|+ that returns a list with the first
 -- elements of its input lists.
@@ -216,7 +223,8 @@ joinToLength n x = [ a ++ b | a <- x, b <- x, length (a++b) == n ]
 
 (+|+) :: [a] -> [a] -> [a]
 -- List compr. of "non empty heads"
-x +|+ y = [ h | (h:_) <- [x,y]]
+x +|+ y = [h | (h : _) <- [x, y]]
+
 -- couldn't figure out a better way than <-[x,y]
 
 ------------------------------------------------------------------------------
@@ -242,8 +250,10 @@ sumRights :: [Either a Int] -> Int
 -- Functions
 -- map list members as Id for Right and 0 for Left and sum through
 sumRights xs = sumNums (map (either (const 0) (\x -> x)) xs)
-  where sumNums [] = 0
-        sumNums (x:xs) = sumNums xs + x
+  where
+    sumNums [] = 0
+    sumNums (x : xs) = sumNums xs + x
+
 ------------------------------------------------------------------------------
 -- Ex 12: recall the binary function composition operation
 -- (f . g) x = f (g x). In this exercise, your task is to define a function
@@ -258,8 +268,8 @@ sumRights xs = sumNums (map (either (const 0) (\x -> x)) xs)
 --   multiCompose [(3*), (2^), (+1)] 0 ==> 6
 --   multiCompose [(+1), (2^), (3*)] 0 ==> 2
 
-multiCompose [] = id 
-multiCompose fs =  multiCompose(init fs) . last fs
+multiCompose [] = id
+multiCompose fs = multiCompose (init fs) . last fs
 
 ------------------------------------------------------------------------------
 -- Ex 13: let's consider another way to compose multiple functions. Given
@@ -322,34 +332,48 @@ multiApp f gs x = f $ map ($ x) gs
 
 interpreter :: [String] -> [String]
 interpreter [] = []
-interpreter cmds = 
- let n     = getInd cmds
-     start = take n cmds
-     end   = drop (n+1) cmds in
- if n < length cmds
- -- Error without Set3a._
-    then parsePrint(cmds !! n)(compCmd (take n cmds)) : Set3a.interpreter(start ++ end)
-    else []
+interpreter cmds =
+  let n = getInd cmds
+      start = take n cmds
+      end = drop (n + 1) cmds
+   in if n < length cmds
+        -- Error without Set3a._
+        then parsePrint (cmds !! n) (compCmd (take n cmds)) : Set3a.interpreter (start ++ end)
+        else []
 
 parse cmd
- | cmd == "up"     = \(x,y) -> (x,y+1)
- | cmd == "down"   = \(x,y) -> (x,y-1)
- | cmd == "left"   = \(x,y) -> (x-1,y)
- | cmd == "right"  = \(x,y) -> (x+1,y)
- | otherwise       = id
+  | cmd == "up" = \(x, y) -> (x, y + 1)
+  | cmd == "down" = \(x, y) -> (x, y - 1)
+  | cmd == "left" = \(x, y) -> (x - 1, y)
+  | cmd == "right" = \(x, y) -> (x + 1, y)
+  | otherwise = id
 
 parsePrint cmd
- | cmd == "printX"    = \(x,y) -> show x
- | cmd == "printY"    = \(x,y) -> show y
+  | cmd == "printX" = \(x, y) -> show x
+  | cmd == "printY" = \(x, y) -> show y
 
-myCompose [] = id 
-myCompose fs =  myCompose(tail fs) . head fs
+myCompose [] = id
+myCompose fs = myCompose (tail fs) . head fs
 
-parseMap cmds = myCompose(map parse cmds)
+parseMap cmds = myCompose (map parse cmds)
+
 -- Works so far
-compCmd cmds = parseMap cmds $ (0,0)
+compCmd cmds = parseMap cmds $ (0, 0)
 
 getInd [] = 0
-getInd (x:xs) = if x == "printX" || x == "printY"
-  then 0
-  else getInd xs + 1 
+getInd (x : xs) =
+  if x == "printX" || x == "printY"
+    then 0
+    else getInd xs + 1
+
+-- Model
+intrp2 :: [String] -> [String]
+intrp2 cmds = fn (0, 0) cmds
+  where
+    fn (x, y) ("up" : cmds) = fn (x, y + 1) cmds
+    fn (x, y) ("down" : cmds) = fn (x, y - 1) cmds
+    fn (x, y) ("left" : cmds) = fn (x - 1, y) cmds
+    fn (x, y) ("right" : cmds) = fn (x + 1, y) cmds
+    fn (x, y) ("printX" : cmds) = show x : fn (x, y) cmds
+    fn (x, y) ("printY" : cmds) = show y : fn (x, y) cmds
+    fn (x, y) [] = []
