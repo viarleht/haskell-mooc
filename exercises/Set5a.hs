@@ -1,7 +1,7 @@
 -- Exercise set 5a
 --
--- * defining algebraic datatypes
--- * recursive datatypes
+-- \* defining algebraic datatypes
+-- \* recursive datatypes
 
 module Set5a where
 
@@ -32,7 +32,7 @@ data BusTicket = SingleTicket | MonthlyTicket String
 -- Implement the functions totalPrice and buyOneMore below.
 
 data ShoppingEntry = MkShoppingEntry String Double Int
-  deriving Show
+  deriving (Show)
 
 threeApples :: ShoppingEntry
 threeApples = MkShoppingEntry "Apple" 0.5 3
@@ -68,7 +68,7 @@ buyOneMore (MkShoppingEntry name price amount) = MkShoppingEntry name price (amo
 -- setAge and setName (see below).
 
 data Person = MkPerson Int String
-  deriving Show
+  deriving (Show)
 
 -- fred is a person whose name is Fred and age is 90
 fred :: Person
@@ -106,7 +106,7 @@ origin = MkPos 0 0
 
 -- getX returns the x of a Position
 getX :: Position -> Int
-getX (MkPos x y) = x 
+getX (MkPos x y) = x
 
 -- getY returns the y of a position
 getY :: Position -> Int
@@ -114,18 +114,18 @@ getY (MkPos x y) = y
 
 -- up increases the y value of a position by one
 up :: Position -> Position
-up (MkPos x y) = MkPos x (y+1)
+up (MkPos x y) = MkPos x (y + 1)
 
 -- right increases the x value of a position by one
 right :: Position -> Position
-right (MkPos x y) = MkPos (x+1) y
+right (MkPos x y) = MkPos (x + 1) y
 
 ------------------------------------------------------------------------------
 -- Ex 6: Here's a datatype that represents a student. A student can
 -- either be a freshman, a nth year student, or graduated.
 
 data Student = Freshman | NthYear Int | Graduated
-  deriving (Show,Eq)
+  deriving (Show, Eq)
 
 -- Implement the function study, which changes a Freshman into a 1st
 -- year student, a 1st year student into a 2nd year student, and so
@@ -133,7 +133,10 @@ data Student = Freshman | NthYear Int | Graduated
 -- graduated student stays graduated even if he studies.
 
 study :: Student -> Student
-study = todo
+study Freshman = NthYear 1
+study (NthYear 7) = Graduated
+study (NthYear n) = NthYear (n + 1)
+study Graduated = Graduated
 
 ------------------------------------------------------------------------------
 -- Ex 7: define a datatype UpDown that represents a counter that can
@@ -152,25 +155,28 @@ study = todo
 -- get (tick (tick (toggle (tick zero))))
 --   ==> -1
 
-data UpDown = UpDownUndefined1 | UpDownUndefined2
+data UpDown = Increasing Int | Decreasing Int
 
 -- zero is an increasing counter with value 0
 zero :: UpDown
-zero = todo
+zero = Increasing 0
 
 -- get returns the counter value
 get :: UpDown -> Int
-get ud = todo
+get (Increasing n) = n
+get (Decreasing n) = n
 
 -- tick increases an increasing counter by one or decreases a
 -- decreasing counter by one
 tick :: UpDown -> UpDown
-tick ud = todo
+tick (Increasing n) = Increasing (n + 1)
+tick (Decreasing n) = Decreasing (n - 1)
 
 -- toggle changes an increasing counter into a decreasing counter and
 -- vice versa
 toggle :: UpDown -> UpDown
-toggle ud = todo
+toggle (Increasing n) = Decreasing n
+toggle (Decreasing n) = Increasing n
 
 ------------------------------------------------------------------------------
 -- Ex 8: you'll find a Color datatype below. It has the three basic
@@ -197,10 +203,15 @@ toggle ud = todo
 -- rgb (Mix (Invert Red) (Invert Green))  ==> [0.5,0.5,1]
 
 data Color = Red | Green | Blue | Mix Color Color | Invert Color
-  deriving Show
+  deriving (Show)
 
 rgb :: Color -> [Double]
-rgb col = todo
+rgb col = case col of
+  Red -> [1, 0, 0]
+  Green -> [0, 1, 0]
+  Blue -> [0, 0, 1]
+  (Mix a b) -> zipWith (\x y -> 0.5 * (x + y)) (rgb a) (rgb b)
+  (Invert a) -> map (\x -> 1 - x) (rgb a)
 
 ------------------------------------------------------------------------------
 -- Ex 9: define a parameterized datatype OneOrTwo that contains one or
@@ -210,6 +221,7 @@ rgb col = todo
 --   One True         ::  OneOrTwo Bool
 --   Two "cat" "dog"  ::  OneOrTwo String
 
+data OneOrTwo a = One a | Two a a
 
 ------------------------------------------------------------------------------
 -- Ex 10: define a recursive datatype KeyVals for storing a set of
@@ -230,14 +242,16 @@ rgb col = todo
 -- Also define the functions toList and fromList that convert between
 -- KeyVals and lists of pairs.
 
-data KeyVals k v = KeyValsUndefined
-  deriving Show
+data KeyVals k v = Empty | Pair k v (KeyVals k v)
+  deriving (Show)
 
-toList :: KeyVals k v -> [(k,v)]
-toList = todo
+toList :: KeyVals k v -> [(k, v)]
+toList Empty = []
+toList (Pair k v keyval) = (k, v) : toList keyval
 
-fromList :: [(k,v)] -> KeyVals k v
-fromList = todo
+fromList :: [(k, v)] -> KeyVals k v
+fromList [] = Empty
+fromList ((x, y) : xs) = Pair x y (fromList xs)
 
 ------------------------------------------------------------------------------
 -- Ex 11: The data type Nat is the so called Peano
@@ -251,13 +265,22 @@ fromList = todo
 --
 
 data Nat = Zero | PlusOne Nat
-  deriving (Show,Eq)
+  deriving (Show, Eq)
 
 fromNat :: Nat -> Int
-fromNat n = todo
+fromNat Zero = 0
+fromNat (PlusOne n) = 1 + fromNat n
 
 toNat :: Int -> Maybe Nat
-toNat z = todo
+toNat z =
+  if z < 0
+    then Nothing
+    else
+      -- Coudln't figure out how to do this without a helper because of expected type err
+      Just $ natty z
+  where
+    natty 0 = Zero
+    natty n = PlusOne (natty (n - 1))
 
 ------------------------------------------------------------------------------
 -- Ex 12: While pleasingly simple in its definition, the Nat datatype is not
@@ -312,15 +335,35 @@ data Bin = End | O Bin | I Bin
 
 -- This function increments a binary number by one.
 inc :: Bin -> Bin
-inc End   = I End
+inc End = I End
 inc (O b) = I b
 inc (I b) = O (inc b)
 
 prettyPrint :: Bin -> String
-prettyPrint = todo
+prettyPrint End = ""
+prettyPrint (O b) = prettyPrint b ++ "0"
+prettyPrint (I b) = prettyPrint b ++ "1"
 
 fromBin :: Bin -> Int
-fromBin = todo
+fromBin b = binHelp b 0 0
+  where
+    binHelp End x _ = x
+    binHelp (O a) x n = binHelp a x (n + 1)
+    binHelp (I a) x n = binHelp a (2 ^ n + x) (n + 1)
 
 toBin :: Int -> Bin
-toBin = todo
+-- classic division alg
+toBin n = binH n
+  where
+    binH x =
+    -- keep dividing by 2 -> increasing powers of 2
+    -- remainder determines O/I 
+      let d = div x 2
+          r = rem x 2
+       in case r of
+            0 -> O (next d)
+            1 -> I (next d)
+      where
+      -- End when div hits zero
+        next 0 = End
+        next a = (binH a)
